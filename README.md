@@ -52,14 +52,14 @@ infrastructure:
 Example Playbook
 ----------------
 
-`ansible-playbook -i inventory.yml playbooks/apply_patches.yml -K --ask-vault-pass`
+`ansible-playbook -i inventory.yml playbooks/apply-patches.yml -K --ask-vault-pass`
 
 ```yaml
 ---
 - name: Update Infrastructure Nodes & Perform a reboot
   hosts: all
   roles:
-    - { role: os_patching }
+    - { role: os-patching }
 
 ```
 
