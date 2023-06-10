@@ -1,0 +1,21 @@
+---
+- name: Prelim | Include Vaulted Variables
+  ansible.builtin.include_vars: vault.yml
+
+- name: "Prelim | Verify need-restarting Command is Present on {{ inventory_hostname }}"
+  ansible.builtin.dnf:
+    name: dnf-utils
+    state: present
+  become: yes
+  when:
+    - ansible_distribution == 'Fedora' or
+      ansible_distribution == 'RedHat'
+
+- name: "Upgrade Operating System of {{ inventory_hostname }}"
+  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+  args:
+    apply:
+      become: yes
+
+- name: Notify Discord
+  ansible.builtin.include_tasks: notify_discord.yml
