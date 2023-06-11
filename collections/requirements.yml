@@ -1,4 +1,4 @@
 ---
 collections:
-  - community.general
+  - name: community.general
     version: 7.0.1
