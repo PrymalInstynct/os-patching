@@ -1,4 +1,7 @@
 ---
+collections:
+  - name: community.general
+    version: 7.0.1
 roles:
   - name: os-patching
     src: https://github.com/PrymalInstynct/os-patching
