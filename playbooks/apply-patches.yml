@@ -2,4 +2,4 @@
 - name: Update Infrastructure Nodes & Perform a reboot
   hosts: all
   roles:
-    - { role: os-patching }
+    - { role: ../roles/os-patching }
