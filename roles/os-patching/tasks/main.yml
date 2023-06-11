@@ -9,7 +9,8 @@
   become: yes
   when:
     - ansible_distribution == 'Fedora' or
-      ansible_distribution == 'RedHat'
+      ansible_distribution == 'RedHat' or
+      ansible_distribution == 'AlmaLinux'
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
