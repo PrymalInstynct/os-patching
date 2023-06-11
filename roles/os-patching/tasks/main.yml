@@ -18,7 +18,6 @@
     apply:
       become: yes
 
-
 - name: Notify Discord
   ansible.builtin.include_tasks: notify_discord.yml
   args:
