@@ -6,7 +6,6 @@
   ansible.builtin.dnf:
     name: dnf-utils
     state: present
-  become: yes
   when:
     - ansible_distribution == 'Fedora' or
       ansible_distribution == 'RedHat' or
@@ -14,9 +13,7 @@
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
   ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
-  args:
-    apply:
-      become: yes
 
 - name: Notify Discord
   ansible.builtin.include_tasks: notify_discord.yml
+  become: no
