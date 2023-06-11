@@ -4,4 +4,4 @@
   become: yes
   serial: 1
   roles:
-    - { role: ../roles/os-patching }
+    - { role: os-patching }
