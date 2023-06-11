@@ -1,4 +1,4 @@
 ---
 roles:
   - name: os-patching
-    src: https://github.com/PrymalInstynct/os-patching/roles/os-patching
+    src: https://github.com/PrymalInstynct/os-patching
