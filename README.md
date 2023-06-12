@@ -52,7 +52,7 @@ infrastructure:
 Example Playbook
 ----------------
 
-`ansible-playbook -i inventory.yml playbooks/apply-patches.yml -K --ask-vault-pass`
+`ansible-playbook -i inventory.yml apply-patches.yml -K --ask-vault-pass`
 
 ```yaml
 ---
