@@ -47,6 +47,7 @@
 - name: "Reboot the {{ inventory_hostname }}"
   ansible.builtin.reboot:
     post_reboot_delay: 30
+  register: rebooted
   when:
     - reboot_required.stat.exists
     - not inventory_hostname in groups["production_net"]
