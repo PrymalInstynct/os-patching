@@ -37,7 +37,7 @@
           - name: IP Address
             value: "{{ ansible_host }}"
   when:
-    - not dnf_results.changed
+    - not apt_results.changed
 
 - name: Check if a Reboot is Required
   ansible.builtin.stat:
@@ -49,4 +49,4 @@
     post_reboot_delay: 30
   register: rebooted
   when:
-    - reboot_required.stat.existss
+    - reboot_required.stat.exists

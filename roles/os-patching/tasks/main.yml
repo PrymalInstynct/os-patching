@@ -10,6 +10,16 @@
   when:
     - ansible_os_family == 'RedHat'
 
+- name: "Prelim | Verify needrestart Command is Present on {{ inventory_hostname }}"
+  community.general.pacman:
+    name: needrestart
+    state: present
+    executable: paru
+    extra_args: "--noconfirm --needed"
+  become: yes
+  when:
+    - ansible_os_family == 'Archlinux'
+
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
   ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"
   args:
