@@ -8,12 +8,10 @@
     state: present
   become: yes
   when:
-    - ansible_distribution == 'Fedora' or
-      ansible_distribution == 'RedHat' or
-      ansible_distribution == 'AlmaLinux'
+    - ansible_os_family == 'RedHat'
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
-  ansible.builtin.include_tasks: "{{ ansible_distribution }}.yml"
+  ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"
   args:
     apply:
       become: yes
