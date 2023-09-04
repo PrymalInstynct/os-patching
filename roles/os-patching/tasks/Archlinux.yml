@@ -14,6 +14,8 @@
     upgrade: true
     executable: paru
     upgrade_extra_args: "--noconfirm --needed"
+    become: yes
+    become_user: "{{ ansible_user }}"
   register: paru_results
 
 - name: "Send Notification to Discord that {{ inventory_hostname }} was Patched"

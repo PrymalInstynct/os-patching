@@ -3,6 +3,8 @@ Role Name
 
 This Ansible role will apply missing OS patches, send a notification via Discord web hook, and reboot the hosts.
 
+- **NOTE:** Assumes a user account with passwordless sudo is used to execute the playbook
+
 Requirements
 ------------
 
