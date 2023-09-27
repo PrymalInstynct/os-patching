@@ -10,12 +10,13 @@
   register: pacman_results
 
 - name: "Update all AUR packages on {{ inventory_hostname }}"
+  become: yes
+  become_user: "{{ ansible_user }}"
   community.general.pacman:
     upgrade: true
     executable: paru
     upgrade_extra_args: "--noconfirm --needed"
-    become: yes
-    become_user: "{{ ansible_user }}"
+
   register: paru_results
 
 - name: "Send Notification to Discord that {{ inventory_hostname }} was Patched"
