@@ -10,6 +10,20 @@ Requirements
 
 ### Collections
   - community.general
+  - community.docker
+
+Dependencies
+------------
+
+### Ansible Host
+  - Docker SDK for Python
+    - python3-docker is a typical package name
+
+### Inventory Hosts
+  - Docker and Docker-Compose
+    - debian 12 packages
+      - docker.io
+      - docker-compose
 
 Role Variables
 --------------
@@ -19,6 +33,9 @@ Role Variables
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
+compose_projects:
+  - /opt/project1
+  - /opt/project2
 
 ```
 

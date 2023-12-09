@@ -6,7 +6,7 @@
   ansible.builtin.dnf:
     name: dnf-utils
     state: present
-  become: yes
+  become: true
   when:
     - ansible_os_family == 'RedHat'
 
@@ -14,20 +14,32 @@
   community.general.pacman:
     name: needrestart
     state: present
-    executable: paru
+    executable: yay
     extra_args: "--noconfirm --needed"
-  become: yes
+  become: true
   when:
     - ansible_os_family == 'Archlinux'
+
+- name: "Prelim | Verify host has Docker installed"
+  ansible.builtin.stat:
+    path: /usr/bin/docker
+  register: docker
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
   ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"
   args:
     apply:
-      become: yes
+      become: true
+
+- name: "Upgrade Docker Compose Services of {{ inventory_hostname }}"
+  ansible.builtin.include_tasks: "Docker.yml"
+  args:
+    apply:
+      become: false
+  when: docker.stat.exists and docker.stat.isreg
 
 - name: Notify Discord
   ansible.builtin.include_tasks: notify_discord.yml
   args:
     apply:
-      become: no
+      become: false

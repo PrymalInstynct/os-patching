@@ -1,0 +1,19 @@
+---
+- name: "Verify Compose Projects exist"
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ compose_projects }}"
+  register: compose
+
+- name: "Update Images and Restart Required Containers"
+  community.docker.docker_compose:
+    project_src: "{{ item.stat.path }}"
+    pull: true
+    recreate: smart
+    state: present
+  loop: "{{ compose.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when:
+    - item.stat.exists
+    - item.stat.isdir|default(false)
