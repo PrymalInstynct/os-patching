@@ -2,5 +2,6 @@
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
 compose_projects:
-  - /opt/servarr
+  - /opt/stacks/starr
+  - /opt/stacks/plex
   - /opt/netboot_xyz
