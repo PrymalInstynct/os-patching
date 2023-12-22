@@ -5,3 +5,4 @@ compose_projects:
   - /opt/stacks/starr
   - /opt/stacks/plex
   - /opt/netboot_xyz
+  - /opt/dockge
