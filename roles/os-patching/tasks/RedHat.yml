@@ -53,4 +53,3 @@
   register: rebooted
   when:
     - reboot_required.rc == 1
-    - not inventory_hostname in groups["development_net"]
