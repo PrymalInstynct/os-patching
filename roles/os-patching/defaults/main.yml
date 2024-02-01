@@ -4,5 +4,6 @@ discord_webhook_token: "{{ vault_discord_webhook_token }}"
 compose_projects:
   - /opt/stacks/starr
   - /opt/stacks/plex
-  - /opt/netboot_xyz
+  - /opt/stacks/netboot_xyz
+  - /opt/stacks/semaphore
   - /opt/dockge
