@@ -2,6 +2,7 @@
 - name: "Update Pacman Cache on {{ inventory_hostname }}"
   community.general.pacman:
     update_cache: true
+  changed_when: false
 
 - name: "Update all Pacman packages on {{ inventory_hostname }}"
   community.general.pacman:

@@ -2,6 +2,7 @@
 - name: "Update APT Cache on {{ inventory_hostname }}"
   ansible.builtin.apt:
     update_cache: yes
+  changed_when: false
 
 - name: "Update all APT packages on {{ inventory_hostname }}"
   ansible.builtin.apt:

@@ -2,6 +2,7 @@
 - name: "Update DNF Cache on {{ inventory_hostname }}"
   ansible.builtin.dnf:
     update_cache: yes
+  changed_when: false
 
 - name: "Update all DNF packages on {{ inventory_hostname }}"
   ansible.builtin.dnf:
