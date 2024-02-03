@@ -6,3 +6,4 @@ compose_projects:
   - /opt/stacks/plex
   - /opt/stacks/netboot_xyz
   - /opt/dockge
+aur_helper: yay

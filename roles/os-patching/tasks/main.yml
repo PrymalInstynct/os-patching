@@ -14,7 +14,7 @@
   community.general.pacman:
     name: needrestart
     state: present
-    executable: yay
+    executable: "{{ aur_helper }}"
     extra_args: "--noconfirm --needed"
   become: true
   when:
@@ -37,9 +37,3 @@
     apply:
       become: false
   when: docker.stat.exists and docker.stat.isreg
-
-- name: Notify Discord
-  ansible.builtin.include_tasks: notify_discord.yml
-  args:
-    apply:
-      become: false

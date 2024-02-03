@@ -10,14 +10,13 @@
   register: pacman_results
 
 - name: "Update all AUR packages on {{ inventory_hostname }}"
-  become: yes
+  become: true
   become_user: "{{ ansible_user }}"
   community.general.pacman:
     upgrade: true
-    executable: paru
+    executable: "{{ aur_helper }}"
     upgrade_extra_args: "--noconfirm --needed"
-
-  register: paru_results
+  register: aur_results
 
 - name: "Send Notification to Discord that {{ inventory_hostname }} was Patched"
   community.general.discord:
@@ -33,7 +32,8 @@
             value: "{{ ansible_host }}"
   when:
     - pacman_results.changed or
-      paru_results.changed
+      aur_results.changed
+  ignore_errors: true
 
 - name: "Send Notification to Discord that {{ inventory_hostname }} was Not Patched"
   community.general.discord:
@@ -49,7 +49,8 @@
             value: "{{ ansible_host }}"
   when:
     - not pacman_results.changed
-    - not paru_results.changed
+    - not aur_results.changed
+  ignore_errors: true
 
 - name: Check if a Reboot is Required
   ansible.builtin.command: /usr/bin/needrestart
@@ -59,25 +60,8 @@
 - name: "Reboot the {{ inventory_hostname }}"
   ansible.builtin.reboot:
     post_reboot_delay: 30
-  register: rebooted
   when:
     - "'Running kernel seems to be up-to-date.' not in reboot_required.stdout"
     - "'No services need to be restarted.' not in reboot_required.stdout"
     - not inventory_hostname in groups["devices_net"]
-
-- name: "Send Notification to Discord that {{ inventory_hostname }} needs to be Rebooted"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "✅ {{ inventory_hostname }} needs to be rebooted ✅"
-        color: 65280
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
-  when:
-    - "'Running kernel seems to be up-to-date.' not in reboot_required.stdout"
-    - "'No services need to be restarted.' not in reboot_required.stdout"
-    - inventory_hostname in groups["devices_net"]
+  notify: Send Reboot Notification
