@@ -35,6 +35,7 @@
     - pacman_results.changed or
       aur_results.changed
   ignore_errors: true
+  changed_when: false
 
 - name: "Send Notification to Discord that {{ inventory_hostname }} was Not Patched"
   community.general.discord:
@@ -52,6 +53,7 @@
     - not pacman_results.changed
     - not aur_results.changed
   ignore_errors: true
+  changed_when: false
 
 - name: Check if a Reboot is Required
   ansible.builtin.command: /usr/bin/needrestart
