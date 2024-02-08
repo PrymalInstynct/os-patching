@@ -34,3 +34,4 @@
   when:
     - docker_results.changed
   ignore_errors: true
+  changed_when: false
