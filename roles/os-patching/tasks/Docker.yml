@@ -19,6 +19,10 @@
     - item.stat.exists
     - item.stat.isdir|default(false)
 
+- name: "Prune Unused Container Images"
+  community.docker.docker_prune:
+    images: true
+
 - name: "Send Notification to Discord that Docker Images were updated on {{ inventory_hostname }}"
   community.general.discord:
     webhook_id: "{{ discord_webhook_id }}"
