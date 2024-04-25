@@ -1,41 +1,88 @@
 ---
-- name: "Verify Compose Projects exist"
-  ansible.builtin.stat:
-    path: "{{ item }}"
-  loop: "{{ compose_projects }}"
-  register: compose
+- name: Docker Compose v1
+  block:
+    - name: "Verify Compose Projects exist"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ compose_projects }}"
+      register: compose
 
-- name: "Update Images and Restart Required Containers"
-  community.docker.docker_compose:
-    project_src: "{{ item.stat.path }}"
-    pull: true
-    recreate: smart
-    state: present
-  register: docker_results
-  loop: "{{ compose.results }}"
-  loop_control:
-    label: "{{ item.item }}"
-  when:
-    - item.stat.exists
-    - item.stat.isdir|default(false)
+    - name: "Compose v1 | Update Images and Restart Required Containers"
+      community.docker.docker_compose:
+        project_src: "{{ item.stat.path }}"
+        pull: true
+        recreate: smart
+        state: present
+      register: docker_results
+      loop: "{{ compose.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - item.stat.exists
+        - item.stat.isdir|default(false)
 
-- name: "Prune Unused Container Images"
-  community.docker.docker_prune:
-    images: true
+    - name: "Prune Unused Container Images"
+      community.docker.docker_prune:
+        images: true
 
-- name: "Send Notification to Discord that Docker Images were updated on {{ inventory_hostname }}"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
-        color: 1127128
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
-  when:
-    - docker_results.changed
-  ignore_errors: true
-  changed_when: false
+    - name: "Send Notification to Discord that Docker Images were updated on {{ inventory_hostname }}"
+      community.general.discord:
+        webhook_id: "{{ discord_webhook_id }}"
+        webhook_token: "{{ discord_webhook_token }}"
+        embeds:
+          - title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
+            color: 1127128
+            fields:
+              - name: Hostname
+                value: "{{ inventory_hostname }}"
+              - name: IP Address
+                value: "{{ ansible_host }}"
+      when:
+        - docker_results.changed
+      ignore_errors: true
+      changed_when: false
+  when: not inventory_hostname is servarr.prymal.linux
+
+- name: Docker Compose v2
+  block:
+    - name: "Verify Compose Projects exist"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ compose_projects }}"
+      register: compose
+
+    - name: "Compose v2 | Update Images and Restart Required Containers"
+      community.docker.docker_compose_v2:
+        project_src: "{{ item.stat.path }}"
+        pull: true
+        recreate: smart
+        state: present
+      register: docker_v2_results
+      loop: "{{ compose.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+      when:
+        - item.stat.exists
+        - item.stat.isdir|default(false)
+
+    - name: "Prune Unused Container Images"
+      community.docker.docker_prune:
+        images: true
+
+    - name: "Send Notification to Discord that Docker Images were updated on {{ inventory_hostname }}"
+      community.general.discord:
+        webhook_id: "{{ discord_webhook_id }}"
+        webhook_token: "{{ discord_webhook_token }}"
+        embeds:
+          - title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
+            color: 1127128
+            fields:
+              - name: Hostname
+                value: "{{ inventory_hostname }}"
+              - name: IP Address
+                value: "{{ ansible_host }}"
+      when:
+        - docker_v2_results.changed
+      ignore_errors: true
+      changed_when: false
+  when: inventory_hostname is servarr.prymal.linux
