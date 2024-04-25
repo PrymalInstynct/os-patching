@@ -41,7 +41,7 @@
         - docker_results.changed
       ignore_errors: true
       changed_when: false
-  when: not inventory_hostname is "servarr.prymal.linux"
+  when: not inventory_hostname == "servarr.prymal.linux"
 
 - name: Docker Compose v2
   block:
@@ -85,4 +85,4 @@
         - docker_v2_results.changed
       ignore_errors: true
       changed_when: false
-  when: inventory_hostname is "servarr.prymal.linux"
+  when: inventory_hostname == "servarr.prymal.linux"
