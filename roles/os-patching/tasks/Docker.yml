@@ -55,7 +55,7 @@
       community.docker.docker_compose_v2:
         project_src: "{{ item.stat.path }}"
         pull: always
-        recreate: smart
+        recreate: auto
         state: present
       register: docker_v2_results
       loop: "{{ compose.results }}"
