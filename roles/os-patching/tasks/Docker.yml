@@ -54,7 +54,7 @@
     - name: "Compose v2 | Update Images and Restart Required Containers"
       community.docker.docker_compose_v2:
         project_src: "{{ item.stat.path }}"
-        pull: true
+        pull: always
         recreate: smart
         state: present
       register: docker_v2_results
