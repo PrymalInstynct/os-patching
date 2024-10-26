@@ -8,15 +8,16 @@ galaxy_info:
   min_ansible_version: "2.10"
 
   platforms:
-  - name: Fedora
-    versions:
-    - "37"
-    - "38"
-    - "39"
-  - name: Debian
-    versions:
-    - "bookworm"
-    - "bullseye"
-  - name: ArchLinux
-    versions:
-      - all
+    - name: Fedora
+      versions:
+        - "37"
+        - "38"
+        - "39"
+        - "40"
+    - name: Debian
+      versions:
+        - "bookworm"
+        - "bullseye"
+    - name: ArchLinux
+      versions:
+        - all
