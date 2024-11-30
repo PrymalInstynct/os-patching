@@ -6,5 +6,6 @@ compose_projects:
   - /opt/stacks/plex
   - /opt/stacks/netboot_xyz
   - /opt/stacks/cloudflare-tunnel
+  - /opt/stacks/semaphore
   - /opt/dockge
 aur_helper: yay
