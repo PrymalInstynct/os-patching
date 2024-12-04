@@ -6,6 +6,6 @@ compose_projects:
   - /opt/stacks/plex
   - /opt/stacks/netboot_xyz
   - /opt/stacks/cloudflare-tunnel
-  - /opt/stacks/semaphore
+  # - /opt/stacks/semaphore # If you patch the thing that is running the auomation it will break the playbook execution
   - /opt/dockge
 aur_helper: yay
