@@ -2,11 +2,13 @@
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
 compose_projects:
-  - /opt/stacks/starr
-  - /opt/stacks/plex
-  - /opt/stacks/netboot_xyz
-  - /opt/stacks/cloudflare-tunnel
-  - /opt/stacks/tailscale-tsidp
-  # - /opt/stacks/semaphore # If you patch the thing that is running the auomation it will break the playbook execution
   - /opt/dockge
+  - /opt/pangolin
+  - /opt/stacks/cloudflare-tunnel
+  - /opt/stacks/netboot_xyz
+  - /opt/stacks/pangolin
+  - /opt/stacks/plex
+  - /opt/stacks/starr
+  - /opt/stacks/stigman
+  # - /opt/stacks/semaphore # If you patch the thing that is running the auomation it will break the playbook execution
 aur_helper: yay
