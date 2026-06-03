@@ -12,3 +12,6 @@ compose_projects:
   - /opt/stacks/stigman
   # - /opt/stacks/semaphore # If you patch the thing that is running the auomation it will break the playbook execution
 aur_helper: yay
+# When false, hosts are patched but never rebooted (reboot-required signals
+# persist, so a later run with reboot_enabled=true will reboot them).
+reboot_enabled: true
