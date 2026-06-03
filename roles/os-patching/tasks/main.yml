@@ -8,7 +8,7 @@
     state: present
   become: true
   when:
-    - ansible_os_family == 'RedHat'
+    - ansible_facts['os_family'] == 'RedHat'
 
 - name: "Prelim | Verify needrestart Command is Present on {{ inventory_hostname }}"
   community.general.pacman:
@@ -18,7 +18,7 @@
     extra_args: "--noconfirm --needed"
   become: true
   when:
-    - ansible_os_family == 'Archlinux'
+    - ansible_facts['os_family'] == 'Archlinux'
 
 - name: "Prelim | Verify host has Docker installed"
   ansible.builtin.stat:
@@ -26,7 +26,7 @@
   register: docker
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
-  ansible.builtin.include_tasks: "{{ ansible_os_family }}.yml"
+  ansible.builtin.include_tasks: "{{ ansible_facts['os_family'] }}.yml"
   args:
     apply:
       become: true
