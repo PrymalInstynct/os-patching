@@ -1,6 +1,8 @@
 ---
 # Shared Discord notification. Callers set embed_title / embed_color and carry
-# their own `when:` on the include. Notification failures must never abort a run.
+# their own `when:` on the include. Optionally pass embed_description and
+# embed_extra_fields (list of {name, value}) to append below the host fields.
+# Notification failures must never abort a run.
 - name: "Send Discord notification: {{ embed_title }}"
   community.general.discord:
     webhook_id: "{{ discord_webhook_id }}"
@@ -9,10 +11,8 @@
       - title: "{{ embed_title }}"
         color: "{{ embed_color }}"
         description: "{{ embed_description | default(omit) }}"
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host | default(inventory_hostname) }}"
+        fields: "{{ [{'name': 'Hostname', 'value': inventory_hostname},
+                     {'name': 'IP Address', 'value': ansible_host | default(inventory_hostname)}]
+                    + (embed_extra_fields | default([])) }}"
   ignore_errors: true
   changed_when: false

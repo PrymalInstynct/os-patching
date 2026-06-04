@@ -72,13 +72,17 @@
 - name: "Notify Discord: excluded stacks have updates pending manual restart"
   ansible.builtin.include_tasks: notify.yml
   vars:
-    embed_title: "🛠️ Manual Action Needed on {{ inventory_hostname }} 🛠️"
+    embed_title: "🛠️ Manual Restart Needed: {{ inventory_hostname }}"
     embed_color: 16753920
     embed_description: >-
-      New images were pulled for these excluded stacks, but they were NOT
-      restarted — reconstitute them manually to apply the update:
-      {{ compose_pull_results.results | default([])
-         | selectattr('changed') | map(attribute='item') | join(', ') }}
+      New images were pulled but these stacks were not restarted.
+      To apply the update, run `docker compose up -d` in each directory below.
+    embed_extra_fields:
+      - name: "Stack(s) to Restart"
+        value: >-
+          {{ compose_pull_results.results | default([])
+             | selectattr('changed') | map(attribute='item')
+             | map('regex_replace', '^(.*)$', '• \1') | join('\n') }}
   when: >-
     compose_pull_results.results | default([])
     | selectattr('changed') | list | length > 0
