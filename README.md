@@ -84,6 +84,18 @@ Example Playbook
 
 ```
 
+Pending Restart Reminders
+-------------------------
+
+Stacks listed in `compose_exclude` (e.g. the automation controller's own stack) get their images
+pulled during patching but are never restarted automatically. `report-pending-restarts.yml` is a
+read-only playbook that reports — via Discord — any stack running an outdated image (a newer image
+was pulled but not applied). It does not patch, pull, or restart anything, and is self-clearing
+once the stack is restarted with `docker compose up -d`. Schedule it daily (e.g. a Semaphore
+template schedule) as a recurring reminder.
+
+`ansible-playbook -i inventory.yml report-pending-restarts.yml -K --ask-vault-pass`
+
 License
 -------
 

@@ -1,0 +1,16 @@
+---
+# Read-only reminder run: reports (via Discord) any Docker Compose stack that is
+# running an outdated image — a newer image was pulled during patching but the
+# stack was never restarted onto it (e.g. the excluded automation controller, or
+# a managed stack whose recreate failed). Does NOT patch, pull, or restart.
+#
+# Schedule this daily (Semaphore template schedule, cron, etc.) to keep nagging
+# until someone runs `docker compose up -d`. The check is self-clearing.
+- name: Report Docker Compose stacks pending a manual restart
+  hosts: all
+  become: true
+  tasks:
+    - name: "Check for stacks running outdated images"
+      ansible.builtin.include_role:
+        name: os-patching
+        tasks_from: report_pending_restarts
