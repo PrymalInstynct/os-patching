@@ -23,6 +23,9 @@
     state: present
   register: docker_v2_results
   loop: "{{ compose_targets }}"
+  # Don't let one broken stack abort the rest of the host's Docker phase;
+  # failures are collected and reported below.
+  ignore_errors: true
 
 - name: "Prune Unused Container Images"
   community.docker.docker_prune:
@@ -35,3 +38,17 @@
     embed_title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
     embed_color: 1127128
   when: docker_v2_results.changed
+
+- name: "Notify Discord: compose stacks failed to update"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "⚠️ Compose Stacks Failed to Update on {{ inventory_hostname }} ⚠️"
+    embed_color: 15158332
+    embed_description: >-
+      These stacks failed and were skipped:
+      {{ docker_v2_results.results | default([])
+         | selectattr('failed', 'defined') | selectattr('failed')
+         | map(attribute='item') | join(', ') }}
+  when: >-
+    docker_v2_results.results | default([])
+    | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
