@@ -19,44 +19,22 @@
     upgrade_extra_args: "--noconfirm --needed"
   register: aur_results
 
-- name: "Notify Discord: patched"
-  ansible.builtin.include_tasks: notify.yml
+- name: "Notify Discord of patch status"
+  ansible.builtin.include_tasks: notify_patch_status.yml
   vars:
-    embed_title: "👍 {{ inventory_hostname }} was patched 👍"
-    embed_color: 1127128
-  when: pacman_results.changed or aur_results.changed
-
-- name: "Notify Discord: no patches required"
-  ansible.builtin.include_tasks: notify.yml
-  vars:
-    embed_title: "👍 No Patches were Required on {{ inventory_hostname }} 👍"
-    embed_color: 65280
-  when:
-    - not pacman_results.changed
-    - not aur_results.changed
+    patched: "{{ pacman_results.changed or aur_results.changed }}"
 
 - name: Check if a Reboot is Required
   ansible.builtin.command: /usr/bin/needrestart
   register: reboot_required
-  changed_when: no
+  changed_when: false
 
-- name: "Reboot the {{ inventory_hostname }}"
-  ansible.builtin.reboot:
-    post_reboot_delay: 30
-  when:
-    - "'Running kernel seems to be up-to-date.' not in reboot_required.stdout"
-    - "'No services need to be restarted.' not in reboot_required.stdout"
-    - not inventory_hostname in groups["devices_net"]
-    - reboot_enabled | bool
-  notify: Send Reboot Notification
+- name: "Determine reboot need on {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    reboot_required_bool: >-
+      {{ 'Running kernel seems to be up-to-date.' not in reboot_required.stdout
+         and 'No services need to be restarted.' not in reboot_required.stdout }}
+    reboot_skip: "{{ inventory_hostname in groups['devices_net'] }}"
 
-- name: "Notify Discord: reboot pending"
-  ansible.builtin.include_tasks: notify.yml
-  vars:
-    embed_title: "⏳ Reboot Pending on {{ inventory_hostname }} ⏳"
-    embed_color: 16753920
-  when:
-    - "'Running kernel seems to be up-to-date.' not in reboot_required.stdout"
-    - "'No services need to be restarted.' not in reboot_required.stdout"
-    - not inventory_hostname in groups["devices_net"]
-    - not reboot_enabled | bool
+- name: "Reboot if required on {{ inventory_hostname }}"
+  ansible.builtin.include_tasks: reboot.yml

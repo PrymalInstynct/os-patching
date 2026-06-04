@@ -1,0 +1,23 @@
+---
+# Shared reboot + reboot-pending notification. Caller must set the boolean
+# `reboot_required_bool` (does the OS report a reboot is needed). Honors
+# `reboot_enabled` (when false, never reboot — just notify) and `reboot_skip`
+# (when true, neither reboot nor notify — e.g. workstations that self-manage).
+- name: "Reboot {{ inventory_hostname }}"
+  ansible.builtin.reboot:
+    post_reboot_delay: 30
+  when:
+    - reboot_required_bool | bool
+    - reboot_enabled | bool
+    - not reboot_skip | bool
+  notify: Send Reboot Notification
+
+- name: "Notify Discord: reboot pending"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "⏳ Reboot Pending on {{ inventory_hostname }} ⏳"
+    embed_color: 16753920
+  when:
+    - reboot_required_bool | bool
+    - not reboot_enabled | bool
+    - not reboot_skip | bool

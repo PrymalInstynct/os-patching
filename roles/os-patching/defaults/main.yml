@@ -12,3 +12,7 @@ aur_helper: yay
 # When false, hosts are patched but never rebooted (reboot-required signals
 # persist, so a later run with reboot_enabled=true will reboot them).
 reboot_enabled: true
+# Per-host override: when true, the host is patched but never rebooted and no
+# reboot-pending notice is sent (e.g. workstations in the devices_net group,
+# set automatically in Archlinux.yml). Defaults false; most hosts reboot.
+reboot_skip: false
