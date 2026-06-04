@@ -16,3 +16,4 @@
                     + (embed_extra_fields | default([])) }}"
   ignore_errors: true
   changed_when: false
+  no_log: true
