@@ -19,41 +19,21 @@
     upgrade_extra_args: "--noconfirm --needed"
   register: aur_results
 
-- name: "Send Notification to Discord that {{ inventory_hostname }} was Patched"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "👍 {{ inventory_hostname }} was patched 👍"
-        color: 1127128
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
-  when:
-    - pacman_results.changed or
-      aur_results.changed
-  ignore_errors: true
-  changed_when: false
+- name: "Notify Discord: patched"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "👍 {{ inventory_hostname }} was patched 👍"
+    embed_color: 1127128
+  when: pacman_results.changed or aur_results.changed
 
-- name: "Send Notification to Discord that {{ inventory_hostname }} was Not Patched"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "👍 No Patches were Required on {{ inventory_hostname }} 👍"
-        color: 65280
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
+- name: "Notify Discord: no patches required"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "👍 No Patches were Required on {{ inventory_hostname }} 👍"
+    embed_color: 65280
   when:
     - not pacman_results.changed
     - not aur_results.changed
-  ignore_errors: true
-  changed_when: false
 
 - name: Check if a Reboot is Required
   ansible.builtin.command: /usr/bin/needrestart
@@ -70,22 +50,13 @@
     - reboot_enabled | bool
   notify: Send Reboot Notification
 
-- name: "Send Notification to Discord that {{ inventory_hostname }} has a Reboot Pending"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "⏳ Reboot Pending on {{ inventory_hostname }} ⏳"
-        color: 16753920
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
+- name: "Notify Discord: reboot pending"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "⏳ Reboot Pending on {{ inventory_hostname }} ⏳"
+    embed_color: 16753920
   when:
     - "'Running kernel seems to be up-to-date.' not in reboot_required.stdout"
     - "'No services need to be restarted.' not in reboot_required.stdout"
     - not inventory_hostname in groups["devices_net"]
     - not reboot_enabled | bool
-  ignore_errors: true
-  changed_when: false

@@ -1,41 +1,37 @@
 ---
-- name: "Verify Compose Projects exist"
-  ansible.builtin.stat:
-    path: "{{ item }}"
-  loop: "{{ compose_projects }}"
-  register: compose
+- name: "Discover running Docker Compose projects on {{ inventory_hostname }}"
+  ansible.builtin.command: docker compose ls --format json
+  register: compose_ls
+  changed_when: false
+  check_mode: false
+
+- name: "Resolve compose project directories on {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    compose_targets: >-
+      {{ compose_ls.stdout | from_json
+         | map(attribute='ConfigFiles')
+         | map('regex_replace', ',.*$', '')
+         | map('dirname')
+         | unique
+         | difference(compose_exclude) }}
 
 - name: "Update Images and Restart Required Containers"
   community.docker.docker_compose_v2:
-    project_src: "{{ item.stat.path }}"
+    project_src: "{{ item }}"
     pull: always
     recreate: auto
     state: present
   register: docker_v2_results
-  loop: "{{ compose.results }}"
-  loop_control:
-    label: "{{ item.item }}"
-  when:
-    - item.stat.exists
-    - item.stat.isdir|default(false)
+  loop: "{{ compose_targets }}"
 
 - name: "Prune Unused Container Images"
   community.docker.docker_prune:
     images: true
+  when: docker_v2_results.changed
 
-- name: "Send Notification to Discord that Docker Images were updated on {{ inventory_hostname }}"
-  community.general.discord:
-    webhook_id: "{{ discord_webhook_id }}"
-    webhook_token: "{{ discord_webhook_token }}"
-    embeds:
-      - title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
-        color: 1127128
-        fields:
-          - name: Hostname
-            value: "{{ inventory_hostname }}"
-          - name: IP Address
-            value: "{{ ansible_host }}"
-  when:
-    - docker_v2_results.changed
-  ignore_errors: true
-  changed_when: false
+- name: "Notify Discord: Docker images updated"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
+    embed_color: 1127128
+  when: docker_v2_results.changed
