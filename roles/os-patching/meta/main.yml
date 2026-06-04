@@ -6,19 +6,31 @@ galaxy_info:
 
   license: MIT
 
-  min_ansible_version: "2.10"
+  min_ansible_version: "2.15"
 
   platforms:
     - name: Fedora
       versions:
-        - "37"
-        - "38"
-        - "39"
         - "40"
+        - "41"
+        - "42"
+    - name: EL
+      versions:
+        - "9"
     - name: Debian
       versions:
         - "bookworm"
-        - "bullseye"
+        - "trixie"
     - name: ArchLinux
       versions:
         - all
+
+  galaxy_tags:
+    - patching
+    - updates
+    - security
+    - docker
+    - discord
+    - reboot
+
+dependencies: []
