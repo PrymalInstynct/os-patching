@@ -25,15 +25,21 @@
     patched: "{{ pacman_results.changed or aur_results.changed }}"
 
 - name: Check if a Reboot is Required
-  ansible.builtin.command: /usr/bin/needrestart
+  ansible.builtin.command: needrestart -b
   register: reboot_required
   changed_when: false
 
 - name: "Determine reboot need on {{ inventory_hostname }}"
+  # needrestart -b prints a machine-readable NEEDRESTART-KSTA line (kernel
+  # status): 0 unknown, 1 current, 2 ABI-compatible upgrade pending, 3 version
+  # upgrade pending. A reboot is warranted for >= 2. This replaces locale- and
+  # version-fragile English stdout string matching.
   ansible.builtin.set_fact:
     reboot_required_bool: >-
-      {{ 'Running kernel seems to be up-to-date.' not in reboot_required.stdout
-         and 'No services need to be restarted.' not in reboot_required.stdout }}
+      {{ (reboot_required.stdout_lines
+          | select('match', '^NEEDRESTART-KSTA:')
+          | map('regex_replace', '^NEEDRESTART-KSTA:\s*', '')
+          | map('int') | first | default(0) | int) >= 2 }}
     reboot_skip: "{{ inventory_hostname in groups['devices_net'] }}"
 
 - name: "Reboot if required on {{ inventory_hostname }}"
