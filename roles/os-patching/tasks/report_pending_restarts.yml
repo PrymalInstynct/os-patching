@@ -1,0 +1,22 @@
+---
+# Read-only entry point (no patching, no pulling): discover the host's compose
+# stacks and report any that are running outdated images and need a manual
+# restart. Intended to be run on a schedule (e.g. daily) as a recurring reminder.
+- name: "Prelim | Include Vaulted Variables"
+  ansible.builtin.include_vars: vault.yml
+
+- name: "Prelim | Verify host has Docker installed"
+  ansible.builtin.stat:
+    path: /usr/bin/docker
+  register: docker
+
+- name: "Report compose stacks pending a manual restart on {{ inventory_hostname }}"
+  when: docker.stat.exists and docker.stat.isreg
+  block:
+    - name: "Discover compose stacks"
+      ansible.builtin.include_tasks: discover_compose.yml
+
+    - name: "Check all discovered stacks for image drift"
+      ansible.builtin.include_tasks: check_drift.yml
+      vars:
+        drift_projects: "{{ compose_discovered }}"

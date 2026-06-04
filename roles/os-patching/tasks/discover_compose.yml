@@ -1,0 +1,24 @@
+---
+# Discover the host's running compose stacks and partition them. Sets:
+#   compose_discovered - all discovered project directories
+#   compose_targets    - fully managed (recreated): discovered minus compose_exclude
+#   compose_pull_only  - excluded stacks present on the host (pulled, not restarted)
+- name: "Discover running Docker Compose projects on {{ inventory_hostname }}"
+  ansible.builtin.command: docker compose ls --format json
+  register: compose_ls
+  changed_when: false
+  check_mode: false
+
+- name: "Resolve discovered compose project directories on {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    compose_discovered: >-
+      {{ compose_ls.stdout | from_json
+         | map(attribute='ConfigFiles')
+         | map('regex_replace', ',.*$', '')
+         | map('dirname')
+         | unique | list }}
+
+- name: "Partition compose projects into managed vs pull-only on {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    compose_targets: "{{ compose_discovered | difference(compose_exclude) }}"
+    compose_pull_only: "{{ compose_discovered | intersect(compose_exclude) }}"
