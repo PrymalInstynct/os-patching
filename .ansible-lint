@@ -1,0 +1,24 @@
+---
+profile: production
+
+exclude_paths:
+  - collections/
+  - roles/os-patching/tests/
+  # Encrypted ansible-vault file; ansible-lint cannot decrypt it to parse.
+  - roles/os-patching/vars/vault.yml
+
+# Rules skipped because they conflict with this role's deliberate design.
+skip_list:
+  # The role uses short, unprefixed vars (compose_exclude, reboot_enabled, etc.)
+  # by convention; it is a single application role, not a shared library.
+  - var-naming[no-role-prefix]
+  # Role dir is intentionally named "os-patching" (hyphen) to match the repo.
+  - role-name
+  # Patching a host TO the latest packages is the entire point of this role.
+  - package-latest
+  # Invariant: notification/reboot failures must never abort a patch run, so
+  # Discord and reboot tasks intentionally use ignore_errors instead of failing.
+  - ignore-errors
+  # The role's notification idiom fires include_tasks on a `when: *.changed`
+  # condition; these are deliberately tasks, not handlers.
+  - no-handler

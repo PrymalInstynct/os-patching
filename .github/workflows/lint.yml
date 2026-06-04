@@ -1,0 +1,41 @@
+---
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: yamllint + ansible-lint + syntax-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install lint tooling
+        run: pip install ansible ansible-lint yamllint
+
+      - name: Install pinned collections
+        run: ansible-galaxy collection install -r collections/requirements.yml
+
+      - name: yamllint
+        run: yamllint .
+
+      - name: ansible-lint
+        run: ansible-lint
+
+      - name: Syntax check (apply-patches.yml)
+        run: ansible-playbook apply-patches.yml --syntax-check
+
+      - name: Syntax check (report-pending-restarts.yml)
+        run: ansible-playbook report-pending-restarts.yml --syntax-check
