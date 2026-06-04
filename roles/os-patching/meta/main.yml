@@ -1,3 +1,4 @@
+---
 galaxy_info:
   author: Chad Zimmerman
   description: Patch OS and Docker Container Images with a single role
