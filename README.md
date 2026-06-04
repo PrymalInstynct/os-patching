@@ -96,6 +96,23 @@ template schedule) as a recurring reminder.
 
 `ansible-playbook -i inventory.yml report-pending-restarts.yml -K --ask-vault-pass`
 
+### Scheduling in Semaphore
+
+Create a **separate template** for this playbook (don't reuse the patching template) and give it a
+**daily schedule**:
+
+1. **Task Template** → Playbook: `report-pending-restarts.yml`, same inventory/repository/environment
+   as your patching template.
+2. **Vault Password** — attach the **same** vault secret your `apply-patches.yml` template uses.
+   This is required: the playbook decrypts `vault.yml` for the Discord webhook credentials, and
+   without it the run fails with `Attempting to decrypt but no vault secrets found`.
+3. **Become / sudo password** — supply it the same way the patching template does (the playbook
+   runs `become: true` so it can read every stack's containers).
+4. **Schedule** — add a cron schedule on the template (e.g. `0 7 * * *` for 07:00 daily).
+
+The run is read-only — it never patches, pulls, or restarts — so it is safe to run as often as
+you like. It keeps re-sending the reminder until the stale stack is restarted.
+
 License
 -------
 
