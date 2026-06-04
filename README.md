@@ -33,9 +33,11 @@ Role Variables
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
-compose_projects:
-  - /opt/project1
-  - /opt/project2
+# Docker Compose stacks are auto-discovered per host via `docker compose ls`.
+# List any stack directories to skip here — most importantly the automation
+# controller's own stack (e.g. Semaphore), which must not be patched mid-run.
+compose_exclude:
+  - /opt/stacks/semaphore
 
 ```
 

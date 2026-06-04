@@ -1,16 +1,11 @@
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
-compose_projects:
-  - /opt/dockge
-  - /opt/pangolin
-  - /opt/stacks/cloudflare-tunnel
-  - /opt/stacks/netboot_xyz
-  - /opt/stacks/pangolin
-  - /opt/stacks/plex
-  - /opt/stacks/starr
-  - /opt/stacks/stigman
-  # - /opt/stacks/semaphore # If you patch the thing that is running the auomation it will break the playbook execution
+# Compose stacks are auto-discovered per host via `docker compose ls`. List any
+# stack directories to skip here. Critically, exclude the automation controller's
+# own stack (e.g. Semaphore) — patching the thing running the playbook breaks the run.
+compose_exclude:
+  - /opt/stacks/semaphore
 aur_helper: yay
 # When false, hosts are patched but never rebooted (reboot-required signals
 # persist, so a later run with reboot_enabled=true will reboot them).
