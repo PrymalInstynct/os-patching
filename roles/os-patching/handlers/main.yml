@@ -10,5 +10,6 @@
           - name: Hostname
             value: "{{ inventory_hostname }}"
           - name: IP Address
-            value: "{{ ansible_host }}"
+            value: "{{ ansible_host | default(inventory_hostname) }}"
   ignore_errors: true
+  no_log: true

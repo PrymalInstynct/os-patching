@@ -4,6 +4,7 @@
 # restart. Intended to be run on a schedule (e.g. daily) as a recurring reminder.
 - name: "Prelim | Include Vaulted Variables"
   ansible.builtin.include_vars: vault.yml
+  no_log: true
 
 - name: "Prelim | Verify host has Docker installed"
   ansible.builtin.stat:

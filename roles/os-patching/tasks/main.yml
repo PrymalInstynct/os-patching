@@ -1,6 +1,7 @@
 ---
 - name: Prelim | Include Vaulted Variables
   ansible.builtin.include_vars: vault.yml
+  no_log: true
 
 - name: "Prelim | Verify need-restarting Command is Present on {{ inventory_hostname }}"
   ansible.builtin.dnf:
