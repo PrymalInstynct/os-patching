@@ -8,6 +8,7 @@
     embeds:
       - title: "{{ embed_title }}"
         color: "{{ embed_color }}"
+        description: "{{ embed_description | default(omit) }}"
         fields:
           - name: Hostname
             value: "{{ inventory_hostname }}"

@@ -35,5 +35,5 @@
   ansible.builtin.include_tasks: "Docker.yml"
   args:
     apply:
-      become: false
+      become: true
   when: docker.stat.exists and docker.stat.isreg

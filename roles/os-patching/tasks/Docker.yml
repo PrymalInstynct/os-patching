@@ -5,15 +5,23 @@
   changed_when: false
   check_mode: false
 
-- name: "Resolve compose project directories on {{ inventory_hostname }}"
+- name: "Resolve discovered compose project directories on {{ inventory_hostname }}"
   ansible.builtin.set_fact:
-    compose_targets: >-
+    compose_discovered: >-
       {{ compose_ls.stdout | from_json
          | map(attribute='ConfigFiles')
          | map('regex_replace', ',.*$', '')
          | map('dirname')
-         | unique
-         | difference(compose_exclude) }}
+         | unique | list }}
+
+# compose_targets are fully managed (pull + recreate); compose_pull_only are
+# excluded stacks present on this host — we pull their images but never restart
+# them (e.g. the automation controller itself), and report any updates so they
+# can be reconstituted manually.
+- name: "Partition compose projects into managed vs pull-only on {{ inventory_hostname }}"
+  ansible.builtin.set_fact:
+    compose_targets: "{{ compose_discovered | difference(compose_exclude) }}"
+    compose_pull_only: "{{ compose_discovered | intersect(compose_exclude) }}"
 
 - name: "Update Images and Restart Required Containers"
   community.docker.docker_compose_v2:
@@ -23,6 +31,9 @@
     state: present
   register: docker_v2_results
   loop: "{{ compose_targets }}"
+  # Don't let one broken stack abort the rest of the host's Docker phase;
+  # failures are collected and reported below.
+  ignore_errors: true
 
 - name: "Prune Unused Container Images"
   community.docker.docker_prune:
@@ -35,3 +46,39 @@
     embed_title: "👍 Docker Images Updated on {{ inventory_hostname }} 👍"
     embed_color: 1127128
   when: docker_v2_results.changed
+
+- name: "Notify Discord: compose stacks failed to update"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "⚠️ Compose Stacks Failed to Update on {{ inventory_hostname }} ⚠️"
+    embed_color: 15158332
+    embed_description: >-
+      These stacks failed and were skipped:
+      {{ docker_v2_results.results | default([])
+         | selectattr('failed', 'defined') | selectattr('failed')
+         | map(attribute='item') | join(', ') }}
+  when: >-
+    docker_v2_results.results | default([])
+    | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
+
+- name: "Pull Images for Excluded Stacks (no recreate) on {{ inventory_hostname }}"
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ item }}"
+    policy: always
+  register: compose_pull_results
+  loop: "{{ compose_pull_only }}"
+  ignore_errors: true
+
+- name: "Notify Discord: excluded stacks have updates pending manual restart"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "🛠️ Manual Action Needed on {{ inventory_hostname }} 🛠️"
+    embed_color: 16753920
+    embed_description: >-
+      New images were pulled for these excluded stacks, but they were NOT
+      restarted — reconstitute them manually to apply the update:
+      {{ compose_pull_results.results | default([])
+         | selectattr('changed') | map(attribute='item') | join(', ') }}
+  when: >-
+    compose_pull_results.results | default([])
+    | selectattr('changed') | list | length > 0
