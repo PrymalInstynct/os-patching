@@ -1,9 +1,11 @@
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
-# Compose stacks are auto-discovered per host via `docker compose ls`. List any
-# stack directories to skip here. Critically, exclude the automation controller's
-# own stack (e.g. Semaphore) — patching the thing running the playbook breaks the run.
+# Compose stacks are auto-discovered per host via `docker compose ls`. Stacks listed
+# here are NOT restarted/recreated — their images are still pulled, and if updates are
+# found a Discord notice flags them for manual reconstitution. Critically, list the
+# automation controller's own stack (e.g. Semaphore) here: restarting the thing running
+# the playbook mid-run would break the run.
 compose_exclude:
   - /opt/stacks/semaphore
 aur_helper: yay
