@@ -2,6 +2,10 @@
 - name: "Update Pacman Cache on {{ inventory_hostname }}"
   community.general.pacman:
     update_cache: true
+  register: pacman_cache_update
+  until: pacman_cache_update is succeeded
+  retries: 10
+  delay: 30
   changed_when: false
 
 - name: "Update all Pacman packages on {{ inventory_hostname }}"

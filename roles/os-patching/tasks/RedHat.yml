@@ -2,6 +2,10 @@
 - name: "Update DNF Cache on {{ inventory_hostname }}"
   ansible.builtin.dnf:
     update_cache: true
+  register: dnf_cache_update
+  until: dnf_cache_update is succeeded
+  retries: 10
+  delay: 30
   changed_when: false
 
 - name: "Update all DNF packages on {{ inventory_hostname }}"

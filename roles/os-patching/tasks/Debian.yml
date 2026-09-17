@@ -2,6 +2,10 @@
 - name: "Update APT Cache on {{ inventory_hostname }}"
   ansible.builtin.apt:
     update_cache: true
+  register: apt_cache_update
+  until: apt_cache_update is succeeded
+  retries: 10
+  delay: 30
   changed_when: false
 
 - name: "Update all APT packages on {{ inventory_hostname }}"
