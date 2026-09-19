@@ -14,9 +14,19 @@
   # failures are collected and reported below.
   ignore_errors: true
 
-- name: "Prune Unused Container Images"
+- name: "Check for crashing or restarting containers in updated stacks on {{ inventory_hostname }}"
+  ansible.builtin.command: >-
+    docker compose --project-directory {{ item }} ps --status restarting --status dead -q
+  register: compose_unhealthy
+  loop: "{{ compose_targets }}"
+  changed_when: false
+  failed_when: false
+
+- name: "Prune Unused Dangling Container Images"
   community.docker.docker_prune:
     images: true
+    images_filters:
+      dangling: true
   when: docker_v2_results.changed
 
 - name: "Notify Discord: Docker images updated"
@@ -39,6 +49,22 @@
   when: >-
     docker_v2_results.results | default([])
     | selectattr('failed', 'defined') | selectattr('failed') | list | length > 0
+
+- name: "Notify Discord: compose stacks with crashing containers"
+  ansible.builtin.include_tasks: notify.yml
+  vars:
+    embed_title: "⚠️ Compose Stacks With Crashing Containers on {{ inventory_hostname }} ⚠️"
+    embed_color: 15158332
+    embed_description: >-
+      Containers in these stacks are crashing or restarting:
+      {{ compose_unhealthy.results | default([])
+         | selectattr('stdout', 'defined')
+         | rejectattr('stdout', 'equalto', '')
+         | map(attribute='item') | join(', ') }}
+  when: >-
+    compose_unhealthy.results | default([])
+    | selectattr('stdout', 'defined')
+    | rejectattr('stdout', 'equalto', '') | list | length > 0
 
 - name: "Pull Images for Excluded Stacks (no recreate) on {{ inventory_hostname }}"
   community.docker.docker_compose_v2_pull:

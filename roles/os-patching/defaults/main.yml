@@ -1,7 +1,7 @@
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
-# Compose stacks are auto-discovered per host via `docker compose ls`. Stacks listed
+# Compose stacks are auto-discovered per host via `docker compose ls --all`. Stacks listed
 # here are NOT restarted/recreated — their images are still pulled, and if updates are
 # found a Discord notice flags them for manual reconstitution. Critically, list the
 # automation controller's own stack (e.g. Semaphore) here: restarting the thing running
@@ -9,10 +9,18 @@ discord_webhook_token: "{{ vault_discord_webhook_token }}"
 compose_exclude:
   - /opt/stacks/semaphore
 aur_helper: yay
+# Packages to hold or exclude from OS upgrades (e.g. zfs, nvidia drivers)
+package_exclude: []
 # When false, hosts are patched but never rebooted (reboot-required signals
 # persist, so a later run with reboot_enabled=true will reboot them).
 reboot_enabled: true
+# When false, the role assesses if a reboot is needed and sets
+# reboot_required_bool, but delegates the reboot action to a secondary play.
+perform_reboot: true
 # Per-host override: when true, the host is patched but never rebooted and no
 # reboot-pending notice is sent (e.g. workstations in the devices_net group,
 # set automatically in Archlinux.yml). Defaults false; most hosts reboot.
 reboot_skip: false
+# When false, suppresses "No Patches were Required" Discord notifications
+# to prevent webhook spam and alert fatigue during daily no-op runs.
+notify_on_no_changes: false

@@ -1,6 +1,11 @@
 # os-patching
 
-A single Ansible role that applies all available OS package updates, updates/restarts Docker Compose stacks, sends Discord notifications about what happened, and reboots the host if the OS reports a reboot is required. Hosts are patched one at a time (`serial: 1`) to ensure a reboot never takes out the whole fleet. Assumes the connecting user has **passwordless sudo**.
+A single Ansible role that applies all available OS package updates, updates/restarts Docker Compose stacks, sends Discord notifications about what happened, and reboots the host if the OS reports a reboot is required.
+
+To ensure fast and safe daily execution in a lab environment:
+- **Parallel Patching & Container Updates**: OS package upgrades and Docker image pulls/recreations run in parallel batches (`serial: "{{ patch_serial | default('33%') }}"`).
+- **Serialized Reboots**: Host reboots run strictly one host at a time (`serial: 1`) only targeting nodes requiring a reboot, ensuring a reboot never takes down the fleet or breaks cluster quorum.
+- Assumes the connecting user has **passwordless sudo**.
 
 ## Requirements
 
@@ -28,26 +33,37 @@ Versions are pinned in `collections/requirements.yml`.
 ---
 discord_webhook_id: "{{ vault_discord_webhook_id }}"
 discord_webhook_token: "{{ vault_discord_webhook_token }}"
-# Docker Compose stacks are auto-discovered per host via `docker compose ls`.
+# Docker Compose stacks are auto-discovered per host via `docker compose ls --all`.
 # List any stack directories to skip here — most importantly the automation
 # controller's own stack (e.g. Semaphore), which must not be patched mid-run.
 compose_exclude:
   - /opt/stacks/semaphore
 aur_helper: yay
+# Packages to hold or exclude from OS upgrades (e.g. zfs, nvidia drivers)
+package_exclude: []
 # When false, hosts are patched but never rebooted (reboot-required signals persist).
 reboot_enabled: true
+# When false, the role assesses if a reboot is needed and sets
+# reboot_required_bool, but delegates the reboot action to a secondary play.
+perform_reboot: true
 # Per-host override: when true, the host is patched but never rebooted and no
 # reboot-pending notice is sent (e.g. workstations in the devices_net group).
 reboot_skip: false
+# When false, suppresses "No Patches were Required" Discord notifications
+# to prevent webhook spam and alert fatigue during daily no-op runs.
+notify_on_no_changes: false
 ```
 
 **Variable Details:**
 
 - `discord_webhook_id` / `discord_webhook_token`: Mapped from vault secrets. Required for Discord notifications.
 - `compose_exclude`: List of Docker Compose stack directories to pull but never restart. Typically includes the automation controller's own stack (e.g. `/opt/stacks/semaphore`) — restarting it mid-run would break the playbook execution.
-- `aur_helper`: AUR wrapper used on Arch Linux (default `yay`). Used for patching AUR packages and installing `needrestart`.
+- `aur_helper`: AUR wrapper used on Arch Linux (default `yay`). Used for patching AUR packages.
+- `package_exclude`: List of package names to hold/exclude from OS upgrades across Debian (`dpkg_selections hold`), RedHat (`exclude`), and Arch Linux (`--ignore`).
 - `reboot_enabled`: Global toggle. When `false`, all hosts are patched but never rebooted. Reboot signals persist, so a later run with `reboot_enabled: true` will reboot them.
+- `perform_reboot`: Internal lifecycle toggle. Defaults to `true` when including the role directly; set to `false` in Play 1 of `apply-patches.yml` so Play 2 handles reboots with `serial: 1`.
 - `reboot_skip`: Per-host override. When `true`, the host is patched but never rebooted and no reboot-pending notice is sent. Automatically set for hosts in the `devices_net` group on Arch Linux.
+- `notify_on_no_changes`: When `false` (default), suppresses "No Patches were Required" notifications on days without updates to avoid Discord rate limits and alert fatigue.
 
 ### Secrets: vars/vault.yml
 
@@ -65,9 +81,9 @@ Edit with: `ansible-vault edit roles/os-patching/vars/vault.yml`
 
 ### Package Upgrades
 
-- **Debian**: `apt full-upgrade`
-- **RedHat** (Fedora, EL): `dnf upgrade -y latest`
-- **Arch Linux**: `pacman -Syu` (system) + AUR via `{{ aur_helper }}` as `ansible_user`
+- **Debian**: `apt full-upgrade` with package exclusions held via `dpkg_selections`
+- **RedHat** (Fedora, EL): `dnf upgrade -y latest` with `exclude: "{{ package_exclude }}"`
+- **Arch Linux**: `pacman -Syu` (system) + AUR via `{{ aur_helper }}` as `ansible_user` (with `--ignore` for excluded packages)
 
 ### Reboot Detection
 
@@ -80,15 +96,21 @@ Reboot detection mechanism varies by OS:
 ### Arch-Specific Behavior
 
 - AUR packages are patched as `ansible_user` via `{{ aur_helper }}` (default `yay`)
+- `needrestart` is installed via native `pacman` as root (avoiding running AUR helpers with superuser privileges)
 - Hosts in the `devices_net` group (workstations) automatically skip reboot and do not send reboot-pending notices (set via `reboot_skip: true`)
-- The role pre-installs `needrestart` on Arch, and `dnf-utils` on RedHat
+- Pre-installs `needrestart` on Arch, and `dnf-utils` on RedHat
 
 ## Docker Compose Handling
 
-Docker stacks are auto-discovered per host via `docker compose ls --format json`. The role partitions discovered stacks into two categories:
+Docker stacks are auto-discovered per host via `docker compose ls --all --format json` (including stopped stacks). The role partitions discovered stacks into two categories:
 
 1. **Fully Managed** (discovered minus `compose_exclude`): Images are pulled with `pull: always` and stacks are recreated (`docker compose up -d`).
 2. **Pull-Only** (discovered ∩ `compose_exclude`): Images are pulled but stacks are **never** restarted. This protects the automation controller's own stack from being torn down mid-run.
+
+### Health Check and Rollback Safety
+
+- **Post-update container health**: Stacks are checked for crashing or restarting containers after recreation; any issues are flagged in Discord immediately.
+- **Rollback Safety**: Prunes only dangling images (`images_filters: dangling: true`), preserving previously tagged images for immediate rollbacks if needed.
 
 ### Pending-Restart Detection
 
@@ -98,12 +120,13 @@ The role detects when stacks are running outdated images (drift-based): it compa
 
 The role sends Discord embeds for:
 
-- OS patches applied (with count)
-- OS patches not required (no-op)
-- Docker images updated (with count)
+- OS patches applied
+- OS patches not required (when `notify_on_no_changes: true`)
+- Docker images updated
+- Stacks with crashing or restarting containers (if any)
+- Compose stacks that failed to update (if any)
 - Stacks with pending restarts (drift detected)
-- Docker stack errors (if any)
-- Host reboot (if triggered)
+- Host reboot (sent synchronously immediately upon host reboot)
 
 All notifications use the webhook credentials from `vault.yml`.
 
@@ -121,9 +144,10 @@ ansible-galaxy collection install -r collections/requirements.yml
 ansible-playbook -i inventory.yml apply-patches.yml -K --ask-vault-pass
 ```
 
-Flags:
+Flags & Variables:
 - `-K`: Prompt for become (sudo) password
 - `--ask-vault-pass`: Prompt for Ansible vault password
+- `-e patch_serial=50%`: Override patching concurrency batch size (default: `33%`)
 - `--check`: Dry-run mode (add to preview changes)
 - `--limit <hostname>`: Run against a single host
 
@@ -133,7 +157,7 @@ Flags:
 ansible-playbook -i inventory.yml report-pending-restarts.yml -K --ask-vault-pass
 ```
 
-This reads-only playbook discovers stacks and reports (via Discord) any with outdated images. It does not patch, pull, or restart anything — safe to run as often as needed. Useful as a daily scheduled reminder.
+This read-only playbook discovers stacks and reports (via Discord) any with outdated images. It does not patch, pull, or restart anything — safe to run as often as needed. Useful as a daily scheduled reminder.
 
 ### Lint & Syntax Check
 
