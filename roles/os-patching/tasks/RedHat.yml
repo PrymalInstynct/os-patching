@@ -12,6 +12,7 @@
   ansible.builtin.dnf:
     name: "*"
     state: latest
+    exclude: "{{ package_exclude }}"
   register: dnf_results
 
 - name: "Cleanup DNF cache on {{ inventory_hostname }}"
@@ -34,6 +35,3 @@
 - name: "Determine reboot need on {{ inventory_hostname }}"
   ansible.builtin.set_fact:
     reboot_required_bool: "{{ reboot_required.rc == 1 }}"
-
-- name: "Reboot if required on {{ inventory_hostname }}"
-  ansible.builtin.include_tasks: reboot.yml

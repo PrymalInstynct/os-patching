@@ -3,6 +3,11 @@
 # `reboot_required_bool` (does the OS report a reboot is needed). Honors
 # `reboot_enabled` (when false, never reboot — just notify) and `reboot_skip`
 # (when true, neither reboot nor notify — e.g. workstations that self-manage).
+- name: "Ensure vaulted variables are loaded for reboot tasks"
+  ansible.builtin.include_vars: vault.yml
+  no_log: true
+  when: discord_webhook_id is not defined or discord_webhook_token is not defined
+
 - name: "Reboot {{ inventory_hostname }}"
   ansible.builtin.reboot:
     post_reboot_delay: 30
@@ -11,6 +16,9 @@
     - reboot_enabled | bool
     - not reboot_skip | bool
   notify: Send Reboot Notification
+
+- name: "Flush reboot notification handler immediately"
+  ansible.builtin.meta: flush_handlers
 
 - name: "Notify Discord: reboot pending"
   ansible.builtin.include_tasks: notify.yml

@@ -1,5 +1,5 @@
 ---
-- name: Prelim | Include Vaulted Variables
+- name: "Prelim | Include Vaulted Variables"
   ansible.builtin.include_vars: vault.yml
   no_log: true
 
@@ -15,7 +15,6 @@
   community.general.pacman:
     name: needrestart
     state: present
-    executable: "{{ aur_helper }}"
     extra_args: "--noconfirm --needed"
   become: true
   when:
@@ -25,6 +24,14 @@
   ansible.builtin.stat:
     path: /usr/bin/docker
   register: docker
+
+- name: "Prelim | Verify Docker daemon is responsive on {{ inventory_hostname }}"
+  ansible.builtin.command: docker info
+  register: docker_info
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: docker.stat.exists and docker.stat.isreg
 
 - name: "Upgrade Operating System of {{ inventory_hostname }}"
   ansible.builtin.include_tasks: "{{ ansible_facts['os_family'] }}.yml"
@@ -37,4 +44,10 @@
   args:
     apply:
       become: true
-  when: docker.stat.exists and docker.stat.isreg
+  when:
+    - docker.stat.exists and docker.stat.isreg
+    - docker_info.rc is defined and docker_info.rc == 0
+
+- name: "Perform Reboot if Required on {{ inventory_hostname }}"
+  ansible.builtin.include_tasks: reboot.yml
+  when: perform_reboot | bool

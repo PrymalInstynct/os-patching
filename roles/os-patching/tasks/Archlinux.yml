@@ -11,7 +11,9 @@
 - name: "Update all Pacman packages on {{ inventory_hostname }}"
   community.general.pacman:
     upgrade: true
-    upgrade_extra_args: "--noconfirm --needed"
+    upgrade_extra_args: >-
+      --noconfirm --needed
+      {% if package_exclude | length > 0 %}--ignore {{ package_exclude | join(',') }}{% endif %}
   register: pacman_results
 
 - name: "Update all AUR packages on {{ inventory_hostname }}"
@@ -20,7 +22,9 @@
   community.general.pacman:
     upgrade: true
     executable: "{{ aur_helper }}"
-    upgrade_extra_args: "--noconfirm --needed"
+    upgrade_extra_args: >-
+      --noconfirm --needed
+      {% if package_exclude | length > 0 %}--ignore {{ package_exclude | join(',') }}{% endif %}
   register: aur_results
 
 - name: "Notify Discord of patch status"
@@ -45,6 +49,3 @@
           | map('regex_replace', '^NEEDRESTART-KSTA:\s*', '')
           | map('int') | first | default(0) | int) >= 2 }}
     reboot_skip: "{{ inventory_hostname in groups['devices_net'] }}"
-
-- name: "Reboot if required on {{ inventory_hostname }}"
-  ansible.builtin.include_tasks: reboot.yml

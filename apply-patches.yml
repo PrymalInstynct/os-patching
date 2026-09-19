@@ -1,7 +1,28 @@
 ---
-- name: Update Infrastructure Nodes & Perform a reboot
+# ============================================================================
+# Play 1: Fast Parallel Patching & Docker Updates
+# ============================================================================
+- name: Apply OS Patches and Update Docker Stacks
   hosts: all
-  become: yes
-  serial: 1
+  become: true
+  serial: "{{ patch_serial | default('33%') }}"
   roles:
     - role: os-patching
+      vars:
+        perform_reboot: false
+
+# ============================================================================
+# Play 2: Strictly Serialized Reboots
+# ============================================================================
+- name: Perform Serialized Reboots
+  hosts: all
+  become: true
+  serial: 1
+  tasks:
+    - name: "Process reboot or reboot-pending notice on {{ inventory_hostname }}"
+      ansible.builtin.include_role:
+        name: os-patching
+        tasks_from: reboot
+      when:
+        - reboot_required_bool | default(false) | bool
+        - not (reboot_skip | default(false) | bool)

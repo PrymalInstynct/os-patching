@@ -1,4 +1,11 @@
 ---
+- name: "Hold excluded packages from being upgraded on {{ inventory_hostname }}"
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: "{{ package_exclude }}"
+  when: package_exclude | length > 0
+
 - name: "Update APT Cache on {{ inventory_hostname }}"
   ansible.builtin.apt:
     update_cache: true
@@ -28,6 +35,3 @@
 - name: "Determine reboot need on {{ inventory_hostname }}"
   ansible.builtin.set_fact:
     reboot_required_bool: "{{ reboot_required.stat.exists }}"
-
-- name: "Reboot if required on {{ inventory_hostname }}"
-  ansible.builtin.include_tasks: reboot.yml

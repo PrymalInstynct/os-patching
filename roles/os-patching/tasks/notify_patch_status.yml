@@ -1,7 +1,7 @@
 ---
 # Shared OS-patch result notification. Caller must set the boolean `patched`
 # (whether any package was upgraded). Emits the "patched" embed when true and
-# the "no patches required" embed when false.
+# the "no patches required" embed when false (if notify_on_no_changes is enabled).
 - name: "Notify Discord: patched"
   ansible.builtin.include_tasks: notify.yml
   vars:
@@ -14,4 +14,6 @@
   vars:
     embed_title: "👍 No Patches were Required on {{ inventory_hostname }} 👍"
     embed_color: 65280
-  when: not patched | bool
+  when:
+    - not patched | bool
+    - notify_on_no_changes | bool
