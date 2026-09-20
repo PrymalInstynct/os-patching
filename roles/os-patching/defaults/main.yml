@@ -21,6 +21,6 @@ perform_reboot: true
 # reboot-pending notice is sent (e.g. workstations in the devices_net group,
 # set automatically in Archlinux.yml). Defaults false; most hosts reboot.
 reboot_skip: false
-# When false, suppresses "No Patches were Required" Discord notifications
-# to prevent webhook spam and alert fatigue during daily no-op runs.
-notify_on_no_changes: false
+# When false, suppresses "No Patches were Required" Discord notifications.
+# Defaults to true to ensure patch attempts and status are visible for all systems.
+notify_on_no_changes: true

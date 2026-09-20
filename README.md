@@ -49,9 +49,9 @@ perform_reboot: true
 # Per-host override: when true, the host is patched but never rebooted and no
 # reboot-pending notice is sent (e.g. workstations in the devices_net group).
 reboot_skip: false
-# When false, suppresses "No Patches were Required" Discord notifications
-# to prevent webhook spam and alert fatigue during daily no-op runs.
-notify_on_no_changes: false
+# When false, suppresses "No Patches were Required" Discord notifications.
+# Defaults to true so patch attempt status is visible for all systems.
+notify_on_no_changes: true
 ```
 
 **Variable Details:**
@@ -63,7 +63,7 @@ notify_on_no_changes: false
 - `reboot_enabled`: Global toggle. When `false`, all hosts are patched but never rebooted. Reboot signals persist, so a later run with `reboot_enabled: true` will reboot them.
 - `perform_reboot`: Internal lifecycle toggle. Defaults to `true` when including the role directly; set to `false` in Play 1 of `apply-patches.yml` so Play 2 handles reboots with `serial: 1`.
 - `reboot_skip`: Per-host override. When `true`, the host is patched but never rebooted and no reboot-pending notice is sent. Automatically set for hosts in the `devices_net` group on Arch Linux.
-- `notify_on_no_changes`: When `false` (default), suppresses "No Patches were Required" notifications on days without updates to avoid Discord rate limits and alert fatigue.
+- `notify_on_no_changes`: When `true` (default), sends "No Patches were Required" Discord notifications for hosts where no updates were needed. Set to `false` to suppress no-change notifications.
 
 ### Secrets: vars/vault.yml
 
@@ -121,7 +121,7 @@ The role detects when stacks are running outdated images (drift-based): it compa
 The role sends Discord embeds for:
 
 - OS patches applied
-- OS patches not required (when `notify_on_no_changes: true`)
+- OS patches not required (when `notify_on_no_changes: true`, default)
 - Docker images updated
 - Stacks with crashing or restarting containers (if any)
 - Compose stacks that failed to update (if any)
