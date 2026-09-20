@@ -1,5 +1,5 @@
 ---
-- name: "Update Pacman Cache on {{ inventory_hostname }}"
+- name: "Update Pacman Cache"
   community.general.pacman:
     update_cache: true
   register: pacman_cache_update
@@ -8,7 +8,7 @@
   delay: 30
   changed_when: false
 
-- name: "Update all Pacman packages on {{ inventory_hostname }}"
+- name: "Update all Pacman packages"
   community.general.pacman:
     upgrade: true
     upgrade_extra_args: >-
@@ -16,7 +16,7 @@
       {% if package_exclude | length > 0 %}--ignore {{ package_exclude | join(',') }}{% endif %}
   register: pacman_results
 
-- name: "Update all AUR packages on {{ inventory_hostname }}"
+- name: "Update all AUR packages"
   become: true
   become_user: "{{ ansible_user }}"
   community.general.pacman:
@@ -37,7 +37,7 @@
   register: reboot_required
   changed_when: false
 
-- name: "Determine reboot need on {{ inventory_hostname }}"
+- name: "Determine reboot need"
   # needrestart -b prints a machine-readable NEEDRESTART-KSTA line (kernel
   # status): 0 unknown, 1 current, 2 ABI-compatible upgrade pending, 3 version
   # upgrade pending. A reboot is warranted for >= 2. This replaces locale- and
@@ -46,6 +46,6 @@
     reboot_required_bool: >-
       {{ (reboot_required.stdout_lines
           | select('match', '^NEEDRESTART-KSTA:')
-          | map('regex_replace', '^NEEDRESTART-KSTA:\s*', '')
+          | map('regex_replace', '^NEEDRESTART-KSTA:\\s*', '')
           | map('int') | first | default(0) | int) >= 2 }}
     reboot_skip: "{{ inventory_hostname in groups['devices_net'] }}"

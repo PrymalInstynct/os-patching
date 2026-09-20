@@ -19,7 +19,7 @@
   become: true
   serial: 1
   tasks:
-    - name: "Process reboot or reboot-pending notice on {{ inventory_hostname }}"
+    - name: "Process reboot or reboot-pending notice"
       ansible.builtin.include_role:
         name: os-patching
         tasks_from: reboot

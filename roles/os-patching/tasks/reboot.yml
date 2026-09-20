@@ -8,7 +8,7 @@
   no_log: true
   when: discord_webhook_id is not defined or discord_webhook_token is not defined
 
-- name: "Reboot {{ inventory_hostname }}"
+- name: "Reboot host"
   ansible.builtin.reboot:
     post_reboot_delay: 30
   when:

@@ -3,7 +3,7 @@
   ansible.builtin.include_vars: vault.yml
   no_log: true
 
-- name: "Prelim | Verify need-restarting Command is Present on {{ inventory_hostname }}"
+- name: "Prelim | Verify need-restarting Command is Present"
   ansible.builtin.dnf:
     name: dnf-utils
     state: present
@@ -11,7 +11,7 @@
   when:
     - ansible_facts['os_family'] == 'RedHat'
 
-- name: "Prelim | Verify needrestart Command is Present on {{ inventory_hostname }}"
+- name: "Prelim | Verify needrestart Command is Present"
   community.general.pacman:
     name: needrestart
     state: present
@@ -25,7 +25,7 @@
     path: /usr/bin/docker
   register: docker
 
-- name: "Prelim | Verify Docker daemon is responsive on {{ inventory_hostname }}"
+- name: "Prelim | Verify Docker daemon is responsive"
   ansible.builtin.command: docker info
   register: docker_info
   changed_when: false
@@ -33,13 +33,13 @@
   check_mode: false
   when: docker.stat.exists and docker.stat.isreg
 
-- name: "Upgrade Operating System of {{ inventory_hostname }}"
+- name: "Upgrade Operating System"
   ansible.builtin.include_tasks: "{{ ansible_facts['os_family'] }}.yml"
   args:
     apply:
       become: true
 
-- name: "Upgrade Docker Compose Services of {{ inventory_hostname }}"
+- name: "Upgrade Docker Compose Services"
   ansible.builtin.include_tasks: "Docker.yml"
   args:
     apply:
@@ -48,6 +48,6 @@
     - docker.stat.exists and docker.stat.isreg
     - docker_info.rc is defined and docker_info.rc == 0
 
-- name: "Perform Reboot if Required on {{ inventory_hostname }}"
+- name: "Perform Reboot if Required"
   ansible.builtin.include_tasks: reboot.yml
   when: perform_reboot | bool

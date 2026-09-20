@@ -11,7 +11,7 @@
     path: /usr/bin/docker
   register: docker
 
-- name: "Prelim | Verify Docker daemon is responsive on {{ inventory_hostname }}"
+- name: "Prelim | Verify Docker daemon is responsive"
   ansible.builtin.command: docker info
   register: docker_info
   changed_when: false
@@ -19,7 +19,7 @@
   check_mode: false
   when: docker.stat.exists and docker.stat.isreg
 
-- name: "Report compose stacks pending a manual restart on {{ inventory_hostname }}"
+- name: "Report compose stacks pending a manual restart"
   when:
     - docker.stat.exists and docker.stat.isreg
     - docker_info.rc is defined and docker_info.rc == 0
