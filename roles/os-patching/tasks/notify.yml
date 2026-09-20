@@ -3,7 +3,7 @@
 # their own `when:` on the include. Optionally pass embed_description and
 # embed_extra_fields (list of {name, value}) to append below the host fields.
 # Notification failures must never abort a run.
-- name: "Send Discord notification: {{ embed_title }}"
+- name: "Send Discord notification"
   community.general.discord:
     webhook_id: "{{ discord_webhook_id }}"
     webhook_token: "{{ discord_webhook_token }}"

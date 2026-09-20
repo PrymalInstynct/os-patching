@@ -1,5 +1,5 @@
 ---
-- name: "Discover and partition compose stacks on {{ inventory_hostname }}"
+- name: "Discover and partition compose stacks"
   ansible.builtin.include_tasks: discover_compose.yml
 
 - name: "Update Images and Restart Required Containers"
@@ -14,7 +14,7 @@
   # failures are collected and reported below.
   ignore_errors: true
 
-- name: "Check for crashing or restarting containers in updated stacks on {{ inventory_hostname }}"
+- name: "Check for crashing or restarting containers in updated stacks"
   ansible.builtin.command: >-
     docker compose --project-directory {{ item }} ps --status restarting --status dead -q
   register: compose_unhealthy
@@ -66,7 +66,7 @@
     | selectattr('stdout', 'defined')
     | rejectattr('stdout', 'equalto', '') | list | length > 0
 
-- name: "Pull Images for Excluded Stacks (no recreate) on {{ inventory_hostname }}"
+- name: "Pull Images for Excluded Stacks (no recreate)"
   community.docker.docker_compose_v2_pull:
     project_src: "{{ item }}"
     policy: always
@@ -76,7 +76,7 @@
 # Report any stack now running an outdated image — typically the excluded
 # pull-only stacks (pulled but not restarted), or a managed stack whose recreate
 # failed above. Drift-based so it keeps reminding until the stack is restarted.
-- name: "Report stacks running outdated images on {{ inventory_hostname }}"
+- name: "Report stacks running outdated images"
   ansible.builtin.include_tasks: check_drift.yml
   vars:
     drift_projects: "{{ compose_discovered }}"

@@ -1,12 +1,12 @@
 ---
-- name: "Hold excluded packages from being upgraded on {{ inventory_hostname }}"
+- name: "Hold excluded packages from being upgraded"
   ansible.builtin.dpkg_selections:
     name: "{{ item }}"
     selection: hold
   loop: "{{ package_exclude }}"
   when: package_exclude | length > 0
 
-- name: "Update APT Cache on {{ inventory_hostname }}"
+- name: "Update APT Cache"
   ansible.builtin.apt:
     update_cache: true
   register: apt_cache_update
@@ -15,7 +15,7 @@
   delay: 30
   changed_when: false
 
-- name: "Update all APT packages on {{ inventory_hostname }}"
+- name: "Update all APT packages"
   ansible.builtin.apt:
     upgrade: full
     autoremove: true
@@ -32,6 +32,6 @@
     path: /var/run/reboot-required
   register: reboot_required
 
-- name: "Determine reboot need on {{ inventory_hostname }}"
+- name: "Determine reboot need"
   ansible.builtin.set_fact:
     reboot_required_bool: "{{ reboot_required.stat.exists }}"

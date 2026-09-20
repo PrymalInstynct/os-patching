@@ -3,7 +3,7 @@
 # but the running container has not been recreated onto it). Self-clearing: once
 # the stack is restarted it stops being reported. Caller sets `drift_projects`
 # (list of project directories to check).
-- name: "Detect compose image drift on {{ inventory_hostname }}"
+- name: "Detect compose image drift"
   ansible.builtin.script: "compose_drift.sh {{ drift_projects | map('quote') | join(' ') }}"
   register: drift_check
   changed_when: false
@@ -22,5 +22,5 @@
       - name: "Stack(s) to Restart"
         value: >-
           {{ drift_check.stdout_lines | default([])
-             | map('regex_replace', '^(.*)$', '• \1') | join('\n') }}
+             | map('regex_replace', '^(.*)$', '• \\1') | join('\n') }}
   when: drift_check.stdout_lines | default([]) | length > 0
