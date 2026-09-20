@@ -16,4 +16,4 @@
     embed_color: 65280
   when:
     - not patched | bool
-    - notify_on_no_changes | bool
+    - notify_on_no_changes | default(true) | bool
